@@ -95,7 +95,7 @@ int main(int argc, char *argv[]){
 			
 			//tomada de tempo
 			GET_TIME(fim);
-			printf("Tempo concorrent: %lf\n", fim-ini);
+			printf("Tempo de execucao: %lf\n", fim-ini);
 			
 			//libera as areas de memoria alocadas
 			free(tid);
