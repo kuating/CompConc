@@ -4,6 +4,16 @@
 #include <math.h>
 #include "timer.h"
 
+/* GERADOR DE MDC
+ * Dados X e Y, gera minimo divisor comum ambos, de forma concorrente,
+ * em dadas nthreads.
+ * 
+ * Entrada: <X> <Y> <nthreads>
+ * Saida: mdc
+ * 
+ * OBS: entrada nao eh passada em argv
+ *  */
+
 long long int X; //primeiro numero
 long long int Y; //segundo numero
 int nthreads; //numero de threads
