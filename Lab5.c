@@ -13,11 +13,16 @@
  * Para a 2: Mesma que a 1, com uma "barreira" no inicio das leitoras,
  * 			 se a fila de escritoras tiver alguma thread.
  * 
- * Para a 3: Mesma que a 1, com uma "barreira" no final de ambas as
- * 			 leitoras e escritoras. Elas so podem prosseguir no while(1)
- * 			 se todas as outras threads ja tiverem executado.
- * 			 Isso nao impede das leitoras executarem paralelamente e
- * 			 impede inanicao.
+ * Para a 3: Mesma que a 2, mas quando existe uma escritora na fila E
+ * 			 as leituras acabaram, a ultima thread leitora manda um
+ * 			 broadcast para as leitoras, alem das escritoras.
+ * 			 Ainda, a leitora pode entrar se tiver escritora na fila
+ * 			 mas nao existem leitoras executando mais.
+ * 			 (Essencialmente, quando uma escritora quiser entrar, as
+ * 			 leitoras vao bloquear, para poder fazer uma decisao
+ * 			 com nenhuma thread executando. Se entrar uma escritora,
+ * 			 bloqueia as leitoras. Se entrar o grupo de leitoras em
+ * 			 espera, bloqueia as escritoras.)
  * 
  * OBS1 Destaquei no terminal os bloqueios, para facilitar a
  * 		visualizacao das partes relevantes.
@@ -163,7 +168,7 @@ void FimEscr2 (int id) {
 void InicLeit3 (int id) {
 	pthread_mutex_lock(&mutex);
 	printf("L[%d] quer ler\n\n", id);
-	while(escr > 0) {
+	while(escr > 0 || (efila>0 && leit>0)) {
 		printf("L[%d] bloqueou------------------------bloqueio\n\n", id);
 		pthread_cond_wait(&cond_leit, &mutex);
 		printf("L[%d] desbloqueou------------------------bloqueio\n\n", id);
@@ -177,15 +182,9 @@ void FimLeit3 (int id) {
 	pthread_mutex_lock(&mutex);
 	printf("L[%d] terminou de ler\n\n", id);
 	leit--;
-	if(leit==0) pthread_cond_signal(&cond_escr);
-	if(bar3 == (L+E-1)) {
-		//ultima thread a chegar na barreira
-		printf("----------[Ciclo Completo]---------\nTodas as threads executaram uma vez\n\n");
-		pthread_cond_broadcast(&cond_3);
-		bar3=0;
-	} else {
-		bar3++;
-		pthread_cond_wait(&cond_3, &mutex);
+	if(leit==0){
+		pthread_cond_signal(&cond_escr);
+		pthread_cond_broadcast(&cond_leit);
 	}
 	pthread_mutex_unlock(&mutex);
 }
@@ -193,6 +192,7 @@ void FimLeit3 (int id) {
 //entrada escrita
 void InicEscr3 (int id) {
 	pthread_mutex_lock(&mutex);
+	efila++;//indica tamanho da fila de escritores
 	printf("E[%d] quer escrever\n\n", id);
 	while((leit>0) || (escr>0)) {
 		printf("E[%d] bloqueou------------------------bloqueio\n\n", id);
@@ -207,18 +207,10 @@ void InicEscr3 (int id) {
 void FimEscr3 (int id) {
 	pthread_mutex_lock(&mutex);
 	printf("E[%d] terminou de escrever\n\n", id);
+	efila--;
 	escr--;
 	pthread_cond_signal(&cond_escr);
 	pthread_cond_broadcast(&cond_leit);
-	if(bar3 == (L+E-1)) {
-		//ultima thread a chegar na barreira
-		printf("----------[Ciclo Completo]---------\nTodas as threads executaram uma vez\n\n");
-		pthread_cond_broadcast(&cond_3);
-		bar3=0;
-	} else {
-		bar3++;
-		pthread_cond_wait(&cond_3, &mutex);
-	}
 	pthread_mutex_unlock(&mutex);
 }
 ////////////////////SOLUCAO3////////////////////////
@@ -234,14 +226,13 @@ void * leitor (void * arg) {
 		if(sol==2) InicLeit2(*id);
 		if(sol==3) InicLeit3(*id);
 		
-		printf("Leitora %d diz:\nVetor: ", *id);
 		int soma = 0;  //soma dos elementos (usado para achar media)
 		char str[N*2+2] = ""; //para for nao causar prints quebrados
 		for(int i=0;i<N;i++){
 			sprintf(str,"%s%d ",str,data[i]);
 			soma+=data[i];
 		}
-		printf("%s\nMedia = %.2lf\n\n",str,(double)soma/N);
+		printf("Leitora %d diz:\nVetor: %s\nMedia = %.2lf\n\n",*id,str,(double)soma/N);
 		if(sol==1) FimLeit(*id);
 		if(sol==2) FimLeit2(*id);
 		if(sol==3) FimLeit3(*id);
