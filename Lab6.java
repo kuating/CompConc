@@ -1,9 +1,3 @@
-/* Disciplina: Computacao Concorrente */
-/* Prof.: Silvana Rossetto */
-/* Laboratório: 6 */
-/* Codigo: Acessando variável compartilhada em um programa multithreading Java */
-/* -------------------------------------------------------------------*/
-
 import java.util.Arrays;
 
 class Vet {
