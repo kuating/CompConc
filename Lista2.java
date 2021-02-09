@@ -13,7 +13,6 @@ class ArqI{
 		//gerar conteudo da string
 		this.string =
 		String.format("Arquivo da Maquina: " + tid + " Numero: " + num);
-		System.out.println(string);
 	}
 	
 	public void imprimiu(){
@@ -49,7 +48,9 @@ class Impressora extends Thread {
 		this.imprimindo = 0;
 	}
 	
-	public synchronized void printLista(){
+	//Ignore a função comentada abaixo por favor
+	
+	/*public synchronized void printLista(){
 	System.out.println("Lista Atual: (inicio ate final da fila)");
 		if(inicio<fim){
 			for(int i = inicio; i<=fim; i++){
@@ -64,7 +65,7 @@ class Impressora extends Thread {
 				System.out.println(buffer[i].toString());
 			}
 		}
-	}
+	}*/
 	
 	public synchronized void waitForImp(ArqI arq){
 		while(arq.seImprimiu()==0){
@@ -96,7 +97,6 @@ class Impressora extends Thread {
 			System.out.println("Imprimindo...");
 			//Processo de impressao
 			try {Thread.sleep(400);} catch(InterruptedException e){}
-			System.out.println("a");
 			System.out.println(buffer[inicio].toString());
 			
 			synchronized(this){
@@ -160,8 +160,6 @@ class Lista2 {
 		
 		//Loop infinito
 		while(true){
-			imp.printLista();
-			try {Thread.sleep(400);} catch(InterruptedException e){}
 			
 		}
 	}
